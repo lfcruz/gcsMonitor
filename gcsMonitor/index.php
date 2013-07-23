@@ -38,8 +38,7 @@ define ("F_SEQUENCEID",15);
 
 // Defining Global Variables ---------------------------------------------------
 global $configStructure,$sequenceStructure,$dbConnector,$socketConnector,
-        $vSequenceId,$vLoggingStatus,$vSystemStatus,$vTrxnString,$gotRecord,$vLastRecord,
-        $operStatus;
+        $vSequenceId,$vLoggingStatus,$vSystemStatus,$vTrxnString,$gotRecord,$vLastRecord;
 
 //=============================================================================
 
@@ -180,7 +179,8 @@ function connectionsSensor() //Done.
     }
 
 // Validating established Monitor socket connection ----------------------------
-    if (!$socketConnector){
+    $sockread = socket_read($socketConnector,1024);
+    if ($sockread === ""){
         writeLog(MSG_ERROR, REF_SENSOR,"Monitor socket link has been disconnected due to an unknown event.......");
         writeLog(MSG_WARNING, REF_SENSOR,"Starting recovery procedure........");
         writeLog(MSG_WARNING, REF_SENSOR,"Connecting to Monitor socket........ ");
@@ -200,25 +200,17 @@ function connectionsSensor() //Done.
     return;
 }
 
-function changeOperStatus($operation) //Done.
-{
-    global $operStatus;
-    
-    $operStatus = $operation;
-    
-    return;
-}
 function appStatusMonitor() //Done.
 {
 // Defining Variables ----------------------------------------------------------
-    global $operStatus,$configStructure,$vLoggingStatus,$vSystemStatus,$dbConnector,$socketConnector;
+    global $configStructure,$vLoggingStatus,$vSystemStatus,$dbConnector,$socketConnector;
     
 // Reload configuration file ---------------------------------------------------
-    //$stringfile = file_get_contents(CONFIG_FILE);
-    //$configStructure = json_decode($stringfile,true);
+    $stringfile = file_get_contents(CONFIG_FILE);
+    $configStructure = json_decode($stringfile,true);
     
 // System status evaluation ----------------------------------------------------
-    switch ($operStatus) {
+    switch ($configStructure["systemStatus"]) {
         case "Off":
             $vSystemStatus = false;
             writeLog(MSG_WARNING,REF_STATUS,"The system has been configured to shutdown!!");
@@ -244,7 +236,8 @@ function appStatusMonitor() //Done.
             $vLoggingStatus = false;
             break;
         default:
-            writeLog(MSG_WARNING,REF_STATUS,"Invalid system status has been set, please verify : SYSTEM STILL RUNNING!!!!!!.....");
+            writeLog(MSG_WARNING,REF_STATUS,"Invalid system status detected, SYSTEM IS NOT PROCESSING!!!!!!!!");
+            $vSystemStatus = false;
             break;
     }
     return;
@@ -337,14 +330,13 @@ loadConfig();
 stablishConnections();
 writeLog(MSG_INFO, REF_GENERAL,"System successfuly loaded!....");
 $counter = 0;
-$operStatus = $configStructure["systemStatus"];
 while (true){
     appStatusMonitor();
     if ($vSystemStatus){
         connectionsSensor();
         getLastTrxn();
         if ($gotRecord){
-            //sendLastTrxn();
+            sendLastTrxn();
             writeLastId();
         }
     }
