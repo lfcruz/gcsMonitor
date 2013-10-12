@@ -37,8 +37,16 @@ define ("F_FOOTER",14);
 define ("F_SEQUENCEID",15);
 
 // Defining Global Variables ---------------------------------------------------
-global $configStructure,$sequenceStructure,$dbConnector,$socketConnector,
-        $vSequenceId,$vLoggingStatus,$vSystemStatus,$vTrxnString,$gotRecord,$vLastRecord;
+global $configStructure,
+       $sequenceStructure,
+       $dbConnector,
+       $socketConnector,
+       $vSequenceId,
+       $vLoggingStatus,
+       $vSystemStatus,
+       $vTrxnString,
+       $gotRecord,
+       $vLastRecord;
 
 //=============================================================================
 
@@ -179,8 +187,9 @@ function connectionsSensor() //Done.
     }
 
 // Validating established Monitor socket connection ----------------------------
-    $sockread = socket_read($socketConnector,1024);
-    if ($sockread === ""){
+    $sockread = socket_read($socketConnector,0);
+    var_dump($sockread);
+    if ($sockread === ''){
         writeLog(MSG_ERROR, REF_SENSOR,"Monitor socket link has been disconnected due to an unknown event.......");
         writeLog(MSG_WARNING, REF_SENSOR,"Starting recovery procedure........");
         writeLog(MSG_WARNING, REF_SENSOR,"Connecting to Monitor socket........ ");
@@ -236,7 +245,7 @@ function appStatusMonitor() //Done.
             $vLoggingStatus = false;
             break;
         default:
-            writeLog(MSG_WARNING,REF_STATUS,"Invalid system status detected, SYSTEM IS NOT PROCESSING!!!!!!!!");
+            writeLog(MSG_WARNING,REF_STATUS,"Invalid system status detected, CHECK CONFIGURATION!!!!!!!!");
             $vSystemStatus = false;
             break;
     }
@@ -324,12 +333,56 @@ function sendLastTrxn() //Done.
     return;
 }
 
+function reConnectionsAttempts($reConnType)
+{
+// Definig Variables -----------------------------------------------------------
+    global $dbConnector,$socketConnector,$configStructure;
 
+    switch ($reConnType){
+    // DB Reconnection Process -
+    case "db":
+            $reConnected = false;
+            $delayer = 3;
+            writeLog(MSG_ERROR, REF_SENSOR,"Database link has been disconnected due to an unknown event.......");
+            writeLog(MSG_WARNING, REF_SENSOR,"Starting recovery procedure........");
+            $connectorString = "host=".$configStructure["bHubDbIp"].
+                               " port=".$configStructure["bHubDbPort"].
+                               " dbname=".$configStructure["bHubDbName"].
+                               " user=".$configStructure["bHubDbUser"].
+                               " password=".$configStructure["bHubDbPassword"];
+            echo("Connecting to database.");
+            while (!$reConnected){
+                $dbConnector = pg_connect($connectorString);
+                if (!$dbConnector){
+                    echo(".");
+                
+                
+                    
+                    writeLog(MSG_ERROR, REF_SENSOR,"An error has occurred connecting to database ".$configStructure["bHubDbName"]);
+                    echo "!!!!!!!!!! Please contact you DB-Administrator. !!!!!!!!!!\n";
+                    pg_clos($dbConnector);
+                    socket_close($socketConnector);
+                    exit;
+                }
+            else {
+                writeLog(MSG_WARNING,REF_SENSOR,"Database connection restablished successfuly.");
+                pg_prepare($dbConnector,SQL_STRING,$configStructure["bHubDbTrxnQuery"]);
+            }
+
+        }
+    // Socket Reconnection Process -
+    case "sk":   
+    
+    default:
+        break;
+    
+    }
+
+}
 // Main function ---------------------------------------------------------------
 loadConfig();
 stablishConnections();
 writeLog(MSG_INFO, REF_GENERAL,"System successfuly loaded!....");
-$counter = 0;
 while (true){
     appStatusMonitor();
     if ($vSystemStatus){
@@ -340,7 +393,7 @@ while (true){
             writeLastId();
         }
     }
-    $counter +=1;
+    sleep(5);
 }
 pg_close($dbConnector);
 socket_close($socketConnector);

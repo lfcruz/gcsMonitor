@@ -1,13 +1,13 @@
 {
-"systemStatus":"Off",
-"monitorPrimaryHost":"172.19.1.233",
+"systemStatus":"Logging",
+"monitorPrimaryHost":"localhost",
 "monitorPrimaryPort":"5557",
-"monitorSecundaryHost":"172.19.1.233",
+"monitorSecundaryHost":"localhost",
 "monitorSecundaryPort":"5557",
 "bHubDbIp":"172.19.1.219",
 "bHubDbPort":"5432",
 "bHubDbName":"billerhub",
 "bHubDbUser":"sa",
 "bHubDbPassword":"password",
-"bHubTrxnQuery":"select  coalesce(('ByteIN'||to_char(payment_date,'DDMMYYYYHH24MI')||'00003MONITORPLU'),'ByteIN00000000000000003MONITORPLU')as Header,lpad(to_char(id::BIGINT,'fm9999999999999999999999999999999999'),50,'0')as mSTR_id,lpad(to_char(amount::NUMERIC,'fm99999999999.00'),14,'0') as mSTR_amount,lpad(biller,4,'0')as mSTR_biller,lpad(contract,20,'0')as mSTR_contract,lpad(currency,4,'0')as mSTR_currency,lpad(localtxid,20,'0')as mSTR_localtxid,lpad(biller_rsp_code,10,'0')as mSTR_biller_rsp_code,lpad(coalesce(to_char(payment_date,'YYYYDDMMHH24MISS'),'00000000000000'),20,'0')as mSTR_payment_date,lpad(coalesce(ref_code,'0000'),40,'0')as mSTR_ref_code,lpad(status,15,'0')as mSTR_status,lpad(to_char(biller_commission::NUMERIC,'fm9999999999999.00'),14,'0')as mSTR_biller_commission,lpad(to_char(payment_broker_tx_fee::NUMERIC,'fm9999999999999.00'),14,'0')as mSTR_payment_broker_tx_fee,lpad(payment_broker_id,32,'0')as mSTR_payment_broker_id,('ByteF')as Footer,id from payment_info where id > $1 order by id;"
+"bHubTrxnQuery":"select  coalesce(('ByteIN'||to_char(payment_date,'DDMMYYYYHH24MI')||'00003MONITORPLU'),'ByteIN00000000000000003MONITORPLU')as Header,lpad(to_char(id::BIGINT,'fm9999999999999999999999999999999999'),50,'0')as mSTR_id,lpad(to_char(amount::NUMERIC,'fm99999999999.00'),14,'0') as mSTR_amount,lpad(biller,4,'0')as mSTR_biller,lpad(contract,20,'0')as mSTR_contract,lpad(currency,4,'0')as mSTR_currency,lpad(localtxid,20,'0')as mSTR_localtxid,lpad(biller_rsp_code,10,'0')as mSTR_biller_rsp_code,lpad(coalesce(to_char(payment_date,'YYYYDDMMHH24MISS'),'00000000000000'),20,'0')as mSTR_payment_date,lpad(coalesce(ref_code,'0000'),40,'0')as mSTR_ref_code,lpad(status,15,'0')as mSTR_status,lpad(to_char(biller_commission::NUMERIC,'fm9999999999999.00'),14,'0')as mSTR_biller_commission,lpad(to_char(payment_broker_tx_fee::NUMERIC,'fm9999999999999.00'),14,'0')as mSTR_payment_broker_tx_fee,lpad(payment_broker_id,32,'0')as mSTR_payment_broker_id,('ByteF')as Footer,id from payment_info where id > $1 and status in ('SUCCESSFUL','FAILED') order by id;"
 }
